@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>APOLLO 11 TOKEN — WALLET</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800&family=Inter:wght@300;500;700&display=swap" rel="stylesheet">
+
+<style>
+/* ====== BODY ====== */
+body{
+  margin:0;
+  font-family:'Inter',sans-serif;
+  background: linear-gradient(rgba(0,0,0,.55),rgba(0,0,0,.75)), url("apolo.jpg") center/cover no-repeat fixed;
+  color:#eaeaea;
+}
+
+/* ====== CONTAINER ====== */
+.container{
+  max-width:1200px;
+  margin:40px auto;
+  padding:30px;
+}
+
+/* ====== HEADER / TOGGLE ====== */
+.header{
+  display:flex;
+  align-items:center;
+  gap:15px;
+  padding:25px 30px;
+  background:rgba(0,0,0,.85);
+  border-radius:25px;
+  cursor:pointer;
+  user-select:none;
+  box-shadow:0 0 60px rgba(0,255,255,.6);
+  transition:.3s;
+}
+.header:hover{
+  background:rgba(0,0,0,.95);
+}
+.eth{
+  width:60px;
+  height:60px;
+  border-radius:50%;
+  background:radial-gradient(circle,#627eea,#2b2b2b);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:2rem;
+  font-weight:800;
+  animation:glow 2s infinite alternate;
+  box-shadow:0 0 15px #00ffff;
+}
+@keyframes glow{
+  from{box-shadow:0 0 15px #00ffff, 0 0 30px #627eea;}
+  to{box-shadow:0 0 25px #00ffff, 0 0 60px #00ff9c;}
+}
+.header h1{
+  font-family:'Orbitron';
+  letter-spacing:2px;
+  font-size:1.6rem;
+  color:#00e5ff;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.header span{
+  margin-left:auto;
+  font-size:.95rem;
+  color:#9fdcff;
+  font-weight:600;
+}
+
+/* ====== WALLET PANEL ====== */
+#walletPanel{
+  margin-top:30px;
+  display:none;
+  opacity:0;
+  transform:translateY(30px);
+  transition:all .6s ease;
+}
+#walletPanel.active{
+  display:block;
+  opacity:1;
+  transform:translateY(0);
+}
+
+/* ====== GRID & BOX ====== */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;}
+.box{
+  background:rgba(0,0,0,.75);
+  padding:30px;
+  border-radius:25px;
+  border:1px solid rgba(0,255,255,.15);
+  box-shadow:0 0 25px rgba(0,255,255,.2);
+}
+.box h2{
+  margin-bottom:20px;
+  font-family:'Orbitron';
+  font-size:1.2rem;
+  color:#00e5ff;
+}
+.breakdown p{display:flex;justify-content:space-between;margin:10px 0;font-size:.95rem;}
+.total{margin-top:20px;font-size:1.15rem;font-weight:700;color:#00ff9c;}
+.price{text-align:center;font-size:2.3rem;margin:20px 0;}
+button{
+  padding:15px 30px;
+  font-family:'Orbitron';
+  font-weight:600;
+  font-size:1rem;
+  border:none;
+  border-radius:50px;
+  cursor:pointer;
+  transition:.3s;
+  background:linear-gradient(135deg,#00ff9c,#00e5ff);
+  color:black;
+}
+button:hover{
+  transform:scale(1.05);
+  box-shadow:0 0 25px #00ffff;
+}
+table{width:100%;border-collapse:collapse;margin-top:20px;font-size:.85rem;}
+th,td{padding:12px;border-bottom:1px solid rgba(255,255,255,.1);}
+th{color:#9fdcff;font-weight:600;}
+.EXPIRED{color:#ffb347;font-weight:600;}
+.FAILED{color:#ff4d4d;font-weight:600;}
+.disclaimer{margin-top:40px;font-size:.85rem;color:#bbb;line-height:1.6;background:rgba(255,255,255,.04);padding:25px;border-radius:15px;}
+
+/* ====== PRESALE ====== */
+.presale-box{
+  background:rgba(10,15,20,.9);
+  padding:25px;
+  border-radius:20px;
+  margin-top:30px;
+  border:1px solid rgba(0,255,255,.15);
+}
+.progress-bar-container{
+  background: rgba(255,255,255,.1);
+  height: 30px;
+  border-radius:15px;
+  overflow:hidden;
+  margin:15px 0;
+}
+.progress-bar{
+  height:100%;
+  width:0%;
+  background: linear-gradient(90deg,#00ff9c,#00e5ff);
+  text-align:right;
+  padding-right:10px;
+  line-height:30px;
+  font-weight:700;
+  transition: width .5s ease;
+  border-radius:15px 0 0 15px;
+}
+.stat{display:flex;justify-content:space-between;margin:8px 0;}
+.stat span{font-weight:500;}
+.stage-table{width:100%;border-collapse:collapse;margin-top:15px;}
+.stage-table th, .stage-table td{padding:10px;border-bottom:1px solid rgba(255,255,255,.1);}
+.stage-table th{color:#9fdcff;font-weight:600;}
+
+/* ====== WATER EFFECT ====== */
+.mystery-text{
+  position: relative;
+  display: inline-block;
+  color: #00e5ff;
+  font-family:'Orbitron';
+  font-weight:700;
+  font-size:1rem;
+  background: linear-gradient(90deg, #00e5ff, #00ff9c, #00e5ff);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: waterMove 3s ease-in-out infinite;
+}
+
+@keyframes waterMove{
+  0%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
+  100%{background-position:0% 50%;}
+}
+
+/* ====== INFO BOX ====== */
+.info-box{
+  background:rgba(0,0,0,.65);
+  border:1px solid rgba(0,255,255,.2);
+  border-radius:20px;
+  padding:20px;
+  margin-top:30px;
+  line-height:1.6;
+}
+.info-box h3{
+  font-family:'Orbitron';
+  color:#00ff9c;
+  margin-bottom:15px;
+}
+.info-box p{margin-bottom:10px;}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <!-- HEADER / BUTTON -->
+  <div class="header" onclick="toggleWallet()">
+    <h1>
+      APOLLO 11 TOKEN 
+      <div class="eth">Ξ</div>
+    </h1>
+    <span>ENTER THE ALIEN MISSION</span>
+  </div>
+
+  <!-- WALLET CONTENT -->
+  <div id="walletPanel">
+
+    <div class="grid">
+
+      <!-- BREAKDOWN -->
+      <div class="box breakdown">
+        <h2>ALIEN Token — Token Breakdown</h2>
+        <p><span>Bought</span><span id="bought">0</span></p>
+        <p><span>Referral</span><span id="referral">0</span></p>
+        <p><span>Bonus Code</span><span id="bonus">0</span></p>
+        <p><span>Leaderboard</span><span id="leaderboard">0</span></p>
+        <p><span>Game Tokens</span><span id="game">0</span></p>
+        <p><span>Staking Packs</span><span id="staking">0</span></p>
+        <p><span>Staked Balance</span><span id="staked">0</span></p>
+        <div class="total" id="totalBalance">Total Balance: 0 ALIEN</div>
+      </div>
+
+      <!-- WALLET VALUE -->
+      <div class="box">
+        <h2>Wallet Value</h2>
+        <div class="price" id="walletPrice">$0</div>
+        <p style="text-align:center" id="currentPrice">Current @ $0.001231</p>
+        <hr style="opacity:.1;margin:25px 0">
+        <h2>Value on Listing</h2>
+        <div class="price" id="listingValue">$0</div>
+        <p style="text-align:center" id="listingPrice">Listing @ $0.06</p>
+        <button onclick="buyTokens()">BUY ALIEN TOKENS</button>
+        <button onclick="stakeTokens()">STAKE ALIEN TOKENS</button>
+      </div>
+
+    </div>
+
+    <!-- INFO SOBRE APOLLO 11 Y AREA 51 -->
+  <div class="info-box">
+  <h3 class="mystery-text">🚀 APOLLO 11 – Public Documents</h3>
+  <p class="mystery-text" style="animation: waterMove 4s ease-in-out infinite;">
+    NASA documentation about the first lunar mission with Neil Armstrong, Buzz Aldrin, and Michael Collins. Includes mission plans, transcripts, medical reports, telemetry, photos, and lunar rock analyses.
+  </p>
+  <p class="mystery-text" style="animation: waterMove 5s ease-in-out infinite;">
+    The documents confirm that the moon landing was real and fully documented, with minor technical failures corrected in real time and quarantine applied to the crew upon return.
+  </p>
+
+  <h3 class="mystery-text">🛸 AREA 51 – Public Documents</h3>
+  <p class="mystery-text" style="animation: waterMove 4.5s ease-in-out infinite;">
+    Secret military base in Nevada, officially acknowledged in 2013. Documents show development of aircraft like the U-2, A-12 OXCART, and SR-71, as well as stealth technology tests.
+  </p>
+  <p class="mystery-text" style="animation: waterMove 5.5s ease-in-out infinite;">
+    Secrecy was due to the Cold War. UFO sightings were in many cases experimental aircraft. There is no evidence of extraterrestrial contact in official documents.
+  </p>
+</div>
+
+
+
+    <div class="presale-box">
+      <h2>Presale Progress</h2>
+      <div class="progress-bar-container">
+          <div class="progress-bar" id="progressBar">0%</div>
+      </div>
+      <div class="stat"><span>Funds Raised:</span><span id="raised">$0</span></div>
+      <div class="stat"><span>Tokens Sold:</span><span id="tokensSold">0 ALIEN</span></div>
+
+      <h2>Token Release Stages</h2>
+      <table class="stage-table">
+        <thead>
+          <tr><th>Stage</th><th>Unlocked %</th><th>Tokens Available</th></tr>
+        </thead>
+        <tbody id="stageTable"></tbody>
+      </table>
+    </div>
+
+    <div class="disclaimer">
+      <strong>Security Notice</strong><br><br>
+      Always secure your wallet and private keys. Losing access will permanently lock your ALIEN tokens. Never share your recovery phrase or private keys.
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+function toggleWallet(){document.getElementById("walletPanel").classList.toggle("active");}
+
+// Presale variables
+const softCap=500000;
+const hardCap=5000000;
+const pricePerToken=0.001231;
+const presaleTokens=300000000;
+
+// Token release stages
+const stages=[25,35,45,65,75,85,95,100];
+const stageTable=document.getElementById("stageTable");
+
+// Wallet simulation
+let fundsRaised=1200000;
+let tokensSold=Math.floor(fundsRaised/pricePerToken);
+let userTokens=0;
+let stakedTokens=0;
+
+function updateDashboard(){
+  let progressPercent=Math.min((fundsRaised/hardCap)*100,100);
+  document.getElementById('progressBar').style.width=progressPercent+'%';
+  document.getElementById('progressBar').textContent=progressPercent.toFixed(1)+'%';
+  document.getElementById('raised').textContent=`$${fundsRaised.toLocaleString()}`;
+  document.getElementById('tokensSold').textContent=`${tokensSold.toLocaleString()} ALIEN`;
+  stageTable.innerHTML='';
+  stages.forEach((percent,index)=>{
+    const tokensAvailable=Math.floor(presaleTokens*(percent/100));
+    stageTable.innerHTML+=`<tr>
+      <td>Stage ${index+1}</td>
+      <td>${percent}%</td>
+      <td>${tokensAvailable.toLocaleString()} ALIEN</td>
+    </tr>`;
+  });
+  document.getElementById('bought').textContent=userTokens.toLocaleString();
+  document.getElementById('staked').textContent=stakedTokens.toLocaleString();
+  document.getElementById('totalBalance').textContent=`Total Balance: ${(userTokens+stakedTokens).toLocaleString()} ALIEN`;
+  document.getElementById('walletPrice').textContent=`$${(userTokens*pricePerToken).toFixed(2)}`;
+}
+
+function buyTokens(){
+  const tokensToBuy=100000;
+  userTokens+=tokensToBuy;
+  fundsRaised+=tokensToBuy*pricePerToken;
+  tokensSold+=tokensToBuy;
+  alert(`You bought ${tokensToBuy.toLocaleString()} ALIEN tokens!`);
+  updateDashboard();
+}
+
+function stakeTokens(){
+  const stakeAmount=50000;
+  if(userTokens>=stakeAmount){
+    userTokens-=stakeAmount;
+    stakedTokens+=stakeAmount;
+    alert(`You staked ${stakeAmount.toLocaleString()} ALIEN tokens!`);
+    updateDashboard();
+  } else {
+    alert("Not enough ALIEN tokens to stake!");
+  }
+}
+
+updateDashboard();
+</script>
+</body>
+</html>
+
